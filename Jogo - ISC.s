@@ -12,6 +12,9 @@ OLD_CORD_SHOT:	.half 0, 0
 .include "sprites/shotVer.data"
 .include "sprites/shotHor.data"
 
+### EFEITOS SONOROS:
+# MORTE INIMIGO: a2 = 124
+
 
 .text
 SETUP: 		la,  a0, mapa4
@@ -98,8 +101,8 @@ KEY2:		li t1,0xFF200000
 		
 		
 	
-FIM:	
-		ret
+FIM:		ret
+		
 
 CHAR_ESQ:	la t0, CHAR_POS
 		la t1, OLD_CHAR_POS
@@ -206,7 +209,16 @@ CHAR_DOWN: 	la t0, CHAR_POS
 		mv s2, a0
 		ret
 		
-DIR_SHOT:	la t1, CHAR_POS  #### SET COORDENADA INICIAL TIRO
+DIR_SHOT:	### EFEITO SONORO TIRO
+		li a0, 70
+		li a1, 1000
+		li a2, 127
+		li a3, 100
+		li a7, 33
+		ecall
+		##############
+		
+		la t1, CHAR_POS  #### SET COORDENADA INICIAL TIRO
 		la t6, CORD_SHOT
 		lh t2, 0(t1)
 		sh t2, 0(t6)
@@ -439,17 +451,22 @@ SHOT_DOWN:      li s3, 4  # instancia SHOT
 		li a3, 1
 		call PRINT
 		
-		j GAME_LOOP		
-FIM_SHOT: mv s3, zero
-	  la t0, OLD_CORD_SHOT
-	  la a0, tileP
-	  lh a1, 0(t0)
-	  lh a2, 2(t0)
-	  li a3, 0
-	  call PRINT
-	  li a3, 1
-	  call PRINT
-	  j GAME_LOOP
+		j GAME_LOOP
+		
+	
+							
+
+FIM_SHOT: 	mv s3, zero
+	  	la t0, OLD_CORD_SHOT
+	  	la a0, tileP
+	  	lh a1, 0(t0)
+	  	lh a2, 2(t0)
+	  	li a3, 0
+	  	call PRINT
+	  	li a3, 1
+	  	call PRINT
+	  	j GAME_LOOP
+	  
 	  
 
 	  
