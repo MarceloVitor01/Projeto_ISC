@@ -204,10 +204,13 @@ SHOT_DIR:	la t0, CHAR_POS
 		lh t2, 2(t0) # t2 = Y
 		addi t1, t1, 16
 		
-		la t3, CORD_SHOT  
+		la t3, CORD_SHOT
+		
 		la a0, shotHor
-		sh a1, 0(t3)
-		sh a2, 2(t3)
+		sh t1, 0(t3)
+		lh a1, 0(t3) #a1 = X
+		sh t2, 2(t0) 
+		sh a2, 2(t3) #a2 =  Y
 		call PRINT
 		j GAME_LOOP
 		
