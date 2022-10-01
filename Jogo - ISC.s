@@ -9,8 +9,10 @@ OLD_CORD_SHOT:	.half 0, 0
 ### EFEITOS SONOROS:
 # MORTE INIMIGO: a2 = 124
 
+# s2 ENDERECO ÚLTIMO PERSONAGEM USADO
 # s3 = SWITCH TIRO
 # s6 = SWITCH CHAR
+# s9 = CONTADOR DE CHAVES
 
 # s6 = 0 CHAR BRANCO
 # s6 = 1 CHAR VERMELHO
@@ -26,7 +28,7 @@ SETUP: 		la,  a0, mapa4
 		
 		la t0, CHAR_POS
 		la a0, charR
-		mv s2, a0 # s2 endereco ultimo personagem usado
+		mv s2, a0 
 		lh a1, 0(t0)
 		lh a2, 2(t0)
 		li a3, 0
@@ -34,9 +36,12 @@ SETUP: 		la,  a0, mapa4
 		li a3, 1
 		call PRINT
 		
+		li s9, 2
 		mv s3, zero
 		
-GAME_LOOP:	li t0, 1
+GAME_LOOP:	beq s9, zero, FIM_MAPA
+		
+		li t0, 1
 		li t1, 2
 		li t2, 3
 		li t3, 4
@@ -62,6 +67,7 @@ GAME_LOOP:	li t0, 1
 		
 		li t0, 0xFF200604
 		sw s0, 0(t0)
+
 		
 		la t0, OLD_CHAR_POS
 		
@@ -98,6 +104,9 @@ KEY2:		li t1,0xFF200000
 		li t0, 'k'
 		beq t2, t0, DIR_SHOT
 		
+		li t0, 'r'
+		beq t2, t0, RETRY
+		
 		
 	
 FIM:		ret
@@ -126,6 +135,9 @@ CHAR_ESQ:	la t0, CHAR_POS
 		sh t1, 0(t0)
 		li t6, 1
 		beq s6, t6, SWITCH_VERMELHO_ESQ
+		li t6, 2
+		beq s6, t6, SWITCH_VERDE_ESQ
+		
 		la a0, charL
 		mv s2, a0
 		ret
@@ -158,7 +170,8 @@ CHAR_DIR: 	la t0, CHAR_POS
 		
 		li t6, 1
 		beq s6, t6, SWITCH_VERMELHO_DIR
-		
+		li t6, 2
+		beq s6, t6, SWITCH_VERDE_DIR
 		
 		la a0, charR
 		mv s2, a0
@@ -190,6 +203,8 @@ CHAR_UP: 	la t0, CHAR_POS
 		
 		li t6, 1
 		beq s6, t6, SWITCH_VERMELHO_UP
+		li t6, 2
+		beq s6, t6, SWITCH_VERDE_UP
 		
 		la a0, charUP
 		mv s2, a0
@@ -212,6 +227,8 @@ CHAR_DOWN: 	la t0, CHAR_POS
 		mul t3, t3, t1
 		add a0, a0, t3
 		lb  t4, 0(a0)
+		li t6, 58
+		beq t6, t4, CHAVE_VERDE
 		bne t4, zero, REVERSE 
 		###
 		sh t1, 2(t0)
@@ -220,6 +237,8 @@ CHAR_DOWN: 	la t0, CHAR_POS
 		
 		li t6, 1
 		beq s6, t6, SWITCH_VERMELHO_DOWN
+		li t6, 2
+		beq s6, t6, SWITCH_VERDE_DOWN
 		
 		la a0, charD
 		mv s2, a0
@@ -659,6 +678,242 @@ FIM_VERMELHO:	     #COORD (224,176)
 		     call PRINT
 		     mv s2, a0
 		     
+		     addi s9, s9, -1
 		     j GAME_LOOP
-		                    
+		   
+CHAVE_VERDE: 	     # t1 = X t5 = Y
+		     li s6, 2
+		     la a0, tileA
+		     mv a1, t5
+		     mv a2, t1
+		     li a3, 0
+                     call PRINT
+		     li a3, 1
+		     call PRINT
+		    
+		     
+		     la a0, charD_GREEN
+		     mv s2, a0
+		     la t6, OLD_CHAR_POS
+		     lh a1, 0(t6)
+		     lh a2, 2(t6)
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     #COORD_TILE_VERMELHO = (208,160)
+		     la a0 tile_verde
+		     li a1, 208
+		     li a2, 160
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     j REVERSE
+		     
+SWITCH_VERDE_ESQ:     la a0, charL_GREEN
+		      mv s2, a0
+		      li t6, 143
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERDE
+		      ret
+	
+SWITCH_VERDE_DIR:     la a0, charR_GREEN
+		      mv s2, a0
+		      li t6, 143
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERDE
+		      ret
+		    
+SWITCH_VERDE_UP:      la a0, charUP_GREEN
+		      mv s2, a0
+		      li t6, 143
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERDE
+		      ret
+		      
+SWITCH_VERDE_DOWN:    la a0, charD_GREEN
+                      mv s2, a0
+                      li t6, 143
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERDE
+                      ret
+		     
+TESTE_VERDE:          la t0, CHAR_POS
+		      lh t1, 0(t0)
+		     
+		      lh t2, 2(t0)
+		      li t6, 33280
+                      mul t4, t1, t2
+                      beq t6, t4, FIM_VERDE
+                      ret
+
+FIM_VERDE:            #COORD (208,176)
+		      la a0, borda
+		      li a1, 208
+		      li a2, 176
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      li s6, 0
+		     
+		      la a0, charD
+		      li a1, 208
+		      li a2, 160
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      mv s2, a0
+		      
+		      addi s9, s9, -1
+		      j GAME_LOOP		                    
 		     	      
+FIM_MAPA:             #COORD PORTA (304,144)  (304,160)
+		      la a0, tileP
+		      li a1, 304
+		      li a2, 144
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+		      la a0, tileP
+		      li a1, 304
+		      li a2, 160
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+		      la t1, OLD_CHAR_POS
+		      lh a1, 0(t1)
+		      lh a2, 2(t1)
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+LOOP_FINAL:	      la t0, CHAR_POS
+		      la t2, OLD_CHAR_POS
+		      lh t3, 0(t0)
+		      sh t3, 0(t2)
+		      lh t3, 2(t0)
+		      sh t3, 2(t2)
+		     
+                      lh t1, 0(t0)
+		      addi t1, t1, 16
+		      sh t1, 0(t0)
+		      
+		      la a0, charR
+		      xori s0, s0, 1  
+		      lh a1, 0(t0)
+		      lh a2, 2(t0)
+		      mv a3, s0
+		      call PRINT
+		
+		
+		      li t0, 0xFF200604
+		      sw s0, 0(t0)
+		
+		      la t0, OLD_CHAR_POS
+		
+		      la a0, tileP
+		      lh a1, 0(t0)
+		      lh a2, 2(t0)
+		
+		      mv a3, s0
+		      xori a3, a3, 1
+		      call PRINT
+		      
+		      li t6, 288
+		      li a0, 100
+		      li a7, 32
+		      ecall
+		      bne a1, t6, LOOP_FINAL
+		      
+		      
+		      
+		      		      
+END_GAME: 	      #(208,160)
+		      la a0, tileP
+		      li a1, 208
+		      li a2, 160
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+		      
+		      
+		      #(224,160)
+		      la a0, tileP
+		      li a1, 224
+		      li a2, 160
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+		      
+		      
+		      #(304,160)
+		      la a0, tileP
+		      li a1, 304
+		      li a2, 160
+		      li a3, 0
+		      call PRINT
+		      li a3, 1
+		      call PRINT
+		      
+	
+		      li t0, 0xFF200604
+		      sw s0, 0(t0)
+		      
+		      
+		      la a0, vitoria
+		      li a1, 0
+		      li a2, 0
+		      li a3, 0
+		      call PRINT
+		      
+		      xori s0, s0, 1
+		      li t0, 0xFF200604
+		      sw s0, 0(t0)
+		      
+		      
+		      
+KEY_FINAL:            li t1,0xFF200000
+		      lw t0,0(t1)
+		      andi t0,t0,0x0001
+   		      beq t0,zero,KEY_FINAL
+  		      lw t2,4(t1)
+  		      
+  		      li t1, 'r'		      
+   		      beq t1, t0, RETRY
+
+
+RETRY:               la t0, CHAR_POS
+		     li t1, 16
+		     sh t1, 0(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     
+		     la t0, OLD_CHAR_POS
+		     li t1, 16
+		     sh t1, 0(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     
+		     j SETUP
+		
+		                 
+
+
+	      	 
+		      
+		      
+		    		      
+		      

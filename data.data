@@ -14,3 +14,8 @@
 .include "sprites/tile_vermelho.data"
 .include "sprites/tile_verde.data"
 .include "sprites/borda.data"
+.include "sprites/charD_GREEN.data"
+.include "sprites/charL_GREEN.data"
+.include "sprites/charR_GREEN.data"
+.include "sprites/charUP_GREEN.data"
+.include "sprites/vitoria.data"
