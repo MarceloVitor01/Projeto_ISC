@@ -3,19 +3,18 @@ CHAR_POS: 	.half 16, 32
 OLD_CHAR_POS:	.half 16, 32
 CORD_SHOT:	.half 0, 0
 OLD_CORD_SHOT:	.half 0, 0
-.include "sprites/charUP.data"
-.include "sprites/charD.data"
-.include "sprites/charR.data"
-.include "sprites/charL.data"
-.include "sprites/mapa4.data"
-.include "sprites/tileP.data"
-.include "sprites/shotVer.data"
-.include "sprites/shotHor.data"
+.include "data.data"
+
 
 ### EFEITOS SONOROS:
 # MORTE INIMIGO: a2 = 124
 
+# s3 = SWITCH TIRO
+# s6 = SWITCH CHAR
 
+# s6 = 0 CHAR BRANCO
+# s6 = 1 CHAR VERMELHO
+# s6 = 2 CHAR VERDE
 .text
 SETUP: 		la,  a0, mapa4
 		li a1, 0
@@ -120,12 +119,18 @@ CHAR_ESQ:	la t0, CHAR_POS
 		mul t3, t3, t5
 		add a0, a0, t3
 		lb  t4, 0(a0)
+		li  t6, 7
+		beq t4, t6, CHAVE_VERMELHA
 		bne t4, zero, REVERSE ####
 		
 		sh t1, 0(t0)
+		li t6, 1
+		beq s6, t6, SWITCH_VERMELHO_ESQ
 		la a0, charL
 		mv s2, a0
 		ret
+	
+		
 		
 CHAR_DIR: 	la t0, CHAR_POS
 		la t1, OLD_CHAR_POS
@@ -136,7 +141,7 @@ CHAR_DIR: 	la t0, CHAR_POS
 		lh t1, 0(t0)
 		addi t1, t1, 16 # endereco X
 		
-		## CHECAGEM DE COLISAO
+		## CHECAGEM DE COLISAO OU CHAVES
 		lh t5, 2(t0) # endereco Y      
 		la a0, mapa4
 		addi a0, a0, 8
@@ -151,6 +156,10 @@ CHAR_DIR: 	la t0, CHAR_POS
 		lh a1, 0(t0)
 		lh a2, 2(t0)
 		
+		li t6, 1
+		beq s6, t6, SWITCH_VERMELHO_DIR
+		
+		
 		la a0, charR
 		mv s2, a0
 		ret
@@ -161,23 +170,26 @@ CHAR_UP: 	la t0, CHAR_POS
 		sw t2, 0(t1)
 
 		la t0, CHAR_POS
-		lh t1, 2(t0)
-		addi t1, t1, -16 #endereco Y
+		lh t5, 2(t0)
+		addi t5, t5, -16 #endereco Y
 		
 		## CHECAGEM DE COLISAO
-		lh t5, 0(t0) # endereco X      
+		lh t1, 0(t0) # endereco X      
 		la a0, mapa4
 		addi a0, a0, 8
-		add a0, a0, t5
+		add a0, a0, t1
 		li t3, 320
-		mul t3, t3, t1
+		mul t3, t3, t5
 		add a0, a0, t3
 		lb  t4, 0(a0)
 		bne t4, zero, REVERSE ####
 		
-		sh t1, 2(t0)
+		sh t5, 2(t0)
 		lh a1, 0(t0)
 		lh a2, 2(t0)
+		
+		li t6, 1
+		beq s6, t6, SWITCH_VERMELHO_UP
 		
 		la a0, charUP
 		mv s2, a0
@@ -205,6 +217,10 @@ CHAR_DOWN: 	la t0, CHAR_POS
 		sh t1, 2(t0)
 		lh a1, 0(t0)
 		lh a2, 2(t0)
+		
+		li t6, 1
+		beq s6, t6, SWITCH_VERMELHO_DOWN
+		
 		la a0, charD
 		mv s2, a0
 		ret
@@ -214,7 +230,10 @@ DIR_SHOT:	### EFEITO SONORO TIRO
 		li a1, 1000
 		li a2, 127
 		li a3, 100
-		li a7, 33
+		li a7, 31
+		ecall
+		li a0, 1500
+		li a7, 32
 		ecall
 		##############
 		
@@ -234,6 +253,9 @@ DIR_SHOT:	### EFEITO SONORO TIRO
 		# s4 = 4 BAIXO
 		############### 
 		
+		li t6, 1
+		beq s6, t6, TESTE_TIRO_RED
+		
 		la t0, charL
 		beq s2, t0, SHOT_ESQ
 		
@@ -247,7 +269,6 @@ DIR_SHOT:	### EFEITO SONORO TIRO
 		la t0, charD
 		beq s2, t0, SHOT_DOWN
 		
-		j GAME_LOOP
 		
 SHOT_DIR:       li s3, 1  # instancia SHOT
 		la t3, CORD_SHOT
@@ -541,6 +562,103 @@ REVERSE:
 		lh t2, 2(t0) #reveser Y
 		sh t2, 2(t0)
 		j GAME_LOOP  
-		
-		
 
+
+
+CHAVE_VERMELHA:	# t1 = X t5 = Y
+		li s6, 1
+		la a0, tileA
+		mv a1, t1
+		mv a2, t5
+		li a3, 0
+		call PRINT
+		li a3, 1
+		call PRINT
+		
+		la a0, charL_RED
+		mv s2, a0
+		la t6, OLD_CHAR_POS
+		lh a1, 0(t6)
+		lh a2, 2(t6)
+		li a3, 0
+		call PRINT
+		li a3, 1
+		call PRINT
+		
+		#COORD_TILE_VERMELHO = (224,160)
+		la a0 tile_vermelho
+		li a1, 224
+		li a2, 160
+		li a3, 0
+		call PRINT
+		li a3, 1
+		call PRINT
+		j REVERSE
+
+SWITCH_VERMELHO_ESQ:  la a0, charL_RED
+		      mv s2, a0
+		      li t6, 143
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERMELHO
+		      ret
+		      
+SWITCH_VERMELHO_DIR:  la a0, charR_RED
+		      mv s2, a0
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERMELHO
+		      ret 		      		      		      
+
+SWITCH_VERMELHO_UP:   la a0, charUP_RED
+		      mv s2, a0
+		      ret 		    		    
+ 
+SWITCH_VERMELHO_DOWN: la a0, charD_RED
+		      mv s2, a0
+		      lh t2, 2(t0)
+		      bgt t2, t6, TESTE_VERMELHO
+		      ret
+
+TESTE_TIRO_RED:	      la t0, charL_RED
+		      beq s2, t0, SHOT_ESQ
+		
+		      la t0, charR_RED
+		      beq s2, t0, SHOT_DIR
+		
+		
+		     la t0, charUP_RED
+		     beq s2, t0, SHOT_UP
+		
+		     la t0, charD_RED
+		     beq s2, t0, SHOT_DOWN
+		     
+TESTE_VERMELHO:      la t0, CHAR_POS
+		     lh t1, 0(t0)
+		     
+		     lh t2, 2(t0)
+		     li t6, 384
+                     add t4, t1, t2
+                     beq t6, t4, FIM_VERMELHO
+                     ret
+                     
+FIM_VERMELHO:	     #COORD (224,176)
+		     la a0, borda
+		     li a1, 224
+		     li a2, 176
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     li s6, 0
+		     
+		     la a0, charD
+		     li a1, 224
+		     li a2, 160
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     mv s2, a0
+		     
+		     j GAME_LOOP
+		                    
+		     	      
