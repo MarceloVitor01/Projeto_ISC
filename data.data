@@ -19,3 +19,6 @@
 .include "sprites/charR_GREEN.data"
 .include "sprites/charUP_GREEN.data"
 .include "sprites/vitoria.data"
+.include "sprites/tile_TIMER.data"
+.include "sprites/derrota.data"
+.include "sprites/fundoP.data"

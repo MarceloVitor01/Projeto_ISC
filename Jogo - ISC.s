@@ -3,16 +3,22 @@ CHAR_POS: 	.half 16, 32
 OLD_CHAR_POS:	.half 16, 32
 CORD_SHOT:	.half 0, 0
 OLD_CORD_SHOT:	.half 0, 0
+CORD_TIMER:     .half 176, 0
 .include "data.data"
 
-
-### EFEITOS SONOROS:
+# TEMPO POR RODADA ~2 MINUTOS
+### EFEITOS SONOROS PROMISSORES:
 # MORTE INIMIGO: a2 = 124
 
-# s2 ENDERECO ÚLTIMO PERSONAGEM USADO
+
+# s0 = FRAME SWITCH
+# s1 = TIMER
+# s2 = ENDERECO ÚLTIMO PERSONAGEM USADO
 # s3 = SWITCH TIRO
 # s6 = SWITCH CHAR
+# s7 / s4= RELOGIO
 # s9 = CONTADOR DE CHAVES
+
 
 # s6 = 0 CHAR BRANCO
 # s6 = 1 CHAR VERMELHO
@@ -37,9 +43,15 @@ SETUP: 		la,  a0, mapa4
 		call PRINT
 		
 		li s9, 2
+		li s1, 176
 		mv s3, zero
 		
 GAME_LOOP:	beq s9, zero, FIM_MAPA
+		
+		
+		beq s7, s4, TIMER 
+		mv s8, zero
+		beq s1, zero, DERROTA
 		
 		li t0, 1
 		li t1, 2
@@ -79,7 +91,7 @@ GAME_LOOP:	beq s9, zero, FIM_MAPA
 		xori a3, a3, 1
 		call PRINT
 		
-		
+		addi s7, s7, 1
 		
 		j GAME_LOOP
 		
@@ -269,7 +281,7 @@ DIR_SHOT:	### EFEITO SONORO TIRO
 		# s3 = 1 DIREITA
 		# s3 = 2 ESQUERDA
 		# s3 = 3 CIMA
-		# s4 = 4 BAIXO
+		# s3 = 4 BAIXO
 		############### 
 		
 		li t6, 1
@@ -585,6 +597,7 @@ REVERSE:
 
 
 CHAVE_VERMELHA:	# t1 = X t5 = Y
+		
 		li s6, 1
 		la a0, tileA
 		mv a1, t1
@@ -604,6 +617,16 @@ CHAVE_VERMELHA:	# t1 = X t5 = Y
 		li a3, 1
 		call PRINT
 		
+		li a0, 70
+		li a1, 1000
+		li a2, 0
+		li a3, 100
+		li a7, 31
+		ecall
+		li a0, 1500
+		li a7, 32
+		ecall
+		
 		#COORD_TILE_VERMELHO = (224,160)
 		la a0 tile_vermelho
 		li a1, 224
@@ -613,6 +636,9 @@ CHAVE_VERMELHA:	# t1 = X t5 = Y
 		li a3, 1
 		call PRINT
 		j REVERSE
+
+		
+		
 
 SWITCH_VERMELHO_ESQ:  la a0, charL_RED
 		      mv s2, a0
@@ -701,6 +727,16 @@ CHAVE_VERDE: 	     # t1 = X t5 = Y
 		     call PRINT
 		     li a3, 1
 		     call PRINT
+		     
+		     li a0, 70
+		     li a1, 1000
+		     li a2, 0
+		     li a3, 100
+		     li a7, 31
+		     ecall
+		     li a0, 1500
+		     li a7, 32
+		     ecall
 		     
 		     #COORD_TILE_VERMELHO = (208,160)
 		     la a0 tile_verde
@@ -870,13 +906,14 @@ END_GAME: 	      #(208,160)
 		      
 	
 		      li t0, 0xFF200604
+		      li s0, 0
 		      sw s0, 0(t0)
 		      
 		      
 		      la a0, vitoria
 		      li a1, 0
 		      li a2, 0
-		      li a3, 0
+		      li a3, 1
 		      call PRINT
 		      
 		      xori s0, s0, 1
@@ -892,7 +929,10 @@ KEY_FINAL:            li t1,0xFF200000
   		      lw t2,4(t1)
   		      
   		      li t1, 'r'		      
-   		      beq t1, t0, RETRY
+   		      beq t1, t2, RETRY
+   		      
+   		      li t1, 'q'
+   		      beq t1, t2, QUIT
 
 
 RETRY:               la t0, CHAR_POS
@@ -907,8 +947,70 @@ RETRY:               la t0, CHAR_POS
 		     li t1, 32
 		     sh t1, 2(t0)
 		     
+		     la t0, CORD_TIMER
+		     li t1, 176
+		     sh t1, 0(t0)
+		     mv t1, zero
+		     sh t1, 2(t0)
+		     
 		     j SETUP
-		
+
+TIMER:	             mv s8, ra
+		     la a0, tile_TIMER
+		     la t0, CORD_TIMER
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     la t0, CORD_TIMER
+		     lh t1, 0(t0)
+		     addi t1, t1, -4
+		     sh t1, 0(t0)
+		     
+		     addi s1, s1, -4
+		     addi s4, s4, 25
+		 
+		     jr s8
+
+DERROTA:	      li t0, 0xFF200604
+		      li s0, 0
+		      sw s0, 0(t0)
+		      
+		      
+		      la a0, derrota
+		      li a1, 0
+		      li a2, 0
+		      li a3, 1
+		      call PRINT
+		      
+		      xori s0, s0, 1
+		      li t0, 0xFF200604
+		      sw s0, 0(t0)
+		      j KEY_FINAL
+		      
+QUIT:		      li t0, 0xFF200604
+		      li s0, 1
+		      sw s0, 0(t0)
+		      
+		      
+		      la a0, fundoP
+		      li a1, 0
+		      li a2, 0
+		      li a3, 0
+		      call PRINT
+		      
+		      xori s0, s0, 1
+		      li t0, 0xFF200604
+		      sw s0, 0(t0)
+		      
+		      li a7, 10
+		      ecall		     
+		 
+		     
+		     
 		                 
 
 
