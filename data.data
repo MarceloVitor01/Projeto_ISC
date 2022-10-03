@@ -24,3 +24,5 @@
 .include "sprites/fundoP.data"
 .include "sprites/inimigo1.data"
 .include "sprites/inimigo2.data"
+.include "sprites/menu.data"
+.include "sprites/menu2.data"

@@ -11,11 +11,13 @@ OLD_CORD_IA2:   .half 224, 96
 IA_RET:         .word 0
 CORD_SHOT_IA:   .half 0, 0
 OLD_CORD_SHOT_IA: .half 0, 0
-CONTADOR:        .half 0
-SWITCH_TIRO_IA:  .byte 0
-DIR_SHOT_IA:     .byte 0
-IA1_DEATH:       .byte 0
-IA2_DEATH:       .byte 0
+CONTADOR:         .half 0
+SWITCH_TIRO_IA:   .byte 0
+DIR_SHOT_IA:      .byte 0
+IA1_DEATH:        .byte 0
+IA2_DEATH:        .byte 0
+VIDAS:            .byte 3
+COORD_VIDA:       .half 288, 206
 
 .include "data.data"
 
@@ -41,6 +43,45 @@ IA2_DEATH:       .byte 0
 # s6 = 1 CHAR VERMELHO
 # s6 = 2 CHAR VERDE
 .text
+MENU:    	la a0, menu
+		mv a1, zero
+		mv a2, zero
+		mv a3, zero
+		call PRINT
+		
+		la a0, menu2
+		mv a1, zero
+		mv a2, zero
+		li a3, 1
+		call PRINT
+		
+
+LOOP_MENU:      call KEY_MENU
+		
+	        xori s0, s0, 1
+		li t0, 0xFF200604
+		sw s0, 0(t0)
+		
+		li a0, 1000
+		li a7, 32
+		ecall
+		
+		j LOOP_MENU
+
+KEY_MENU:	li t1,0xFF200000
+		lw t0,0(t1)
+		andi t0,t0,0x0001
+   		beq t0,zero,FIM
+  		lw t2,4(t1)
+  		
+	        li t0, 'p'
+		beq t2, t0, CHANGE_SETUP
+		ret
+
+CHANGE_SETUP:   mv s0, zero
+		li t0, 0xFF200604
+		sw s0, 0(t0)
+
 SETUP: 		la,  a0, mapa4
 		li a1, 0
 		li a2, 0
@@ -1081,8 +1122,45 @@ RETRY:               la t0, CHAR_POS
 		     mv t1, zero
 		     sh t1, 2(t0)
 		     
+		     la t0, VIDAS
+		     lb t1, 0(t0)
+		     addi t1, t1, 3
+		     sb t1, 0(t0)
+		     
+		     la t0, COORD_VIDA
+		     lh t1, 0(t0)
+		     li t1, 288 
+		     sh t1, 0(t0)
+		     lh t1, 2(t0)
+		     li t1, 206
+		     sh t1, 2(t0)
+		     
+		     la t0 CORD_IA1
+		     li t1, 48
+		     sh t1, 0(t0)
+		     li t1, 160
+		     sh t1, 2(t0)
+		     
+		     la t0 OLD_CORD_IA1
+		     li t1, 48
+		     sh t1, 0(t0)
+		     li t1, 160
+		     sh t1, 2(t0)
+		     
+		     la t0 CORD_IA2
+		     li t1, 224
+		     sh t1, 0(t0)
+		     li t1, 48
+		     sh t1, 2(t0)
+		     
+		     la t0 OLD_CORD_IA2
+		     li t1, 224
+		     sh t1, 0(t0)
+		     li t1, 48
+		     sh t1, 2(t0)
 		     j SETUP
-
+		     
+		     
 TIMER:	            
 		     la a0, tile_TIMER
 		     la t0, CORD_TIMER
@@ -1103,7 +1181,11 @@ TIMER:
 		 
 		     j P_TESTE
 
-DERROTA:	      li t0, 0xFF200604
+DERROTA:	      la t0, VIDAS
+		      lb t1, 0(t0)
+		      bnez t1, REBORN
+		      
+		      li t0, 0xFF200604
 		      li s0, 0
 		      sw s0, 0(t0)
 		      
@@ -1704,3 +1786,54 @@ IA2_DED:	     la t0, IA2_DEATH
 MACRO_RET:	     la t0, IA_RET
 		     lw t1, 0(t0)
 		     jr t1		     		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             
+
+REBORN:              la t0, VIDAS   # mover 19 pixels para esquerda base: (288,206)
+		     lb t1, 0(t0)
+		     addi t1, t1, -1
+		     sb t1, 0(t0)
+		     
+		     la t0, COORD_VIDA
+		     la a0, tileP
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     la t0, COORD_VIDA
+		     lh t1, 0(t0)
+		     addi t1, t1, -16
+		     sh t1, 0(t0)
+		     
+		     la t0, CHAR_POS
+		     la a0, tileP
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     mv a3, zero
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     la t0, CHAR_POS #(16,32)
+		     lh t1, 0(t0)
+		     li t1, 16
+		     sh t1, 0(t0)
+		     
+		     la t0, CHAR_POS
+		     lh t1, 2(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     
+		     la t0, OLD_CHAR_POS #(16,32)
+		     lh t1, 0(t0)
+		     li t1, 16
+		     sh t1, 0(t0)
+		     
+		     la t0, OLD_CHAR_POS
+		     lh t1, 2(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     la s2, charR
+		     
+		     j GAME_LOOP
