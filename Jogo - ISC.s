@@ -6,7 +6,7 @@ OLD_CORD_SHOT:	.half 0, 0
 CORD_TIMER:     .half 176, 0
 CORD_IA1:       .half 48, 160
 OLD_CORD_IA1:   .half 48, 160
-CORD_IA2:    	.half 224, 96
+CORD_IA2:    	.half 224, 48
 OLD_CORD_IA2:   .half 224, 96
 IA_RET:         .word 0
 CORD_SHOT_IA:   .half 0, 0
@@ -14,6 +14,9 @@ OLD_CORD_SHOT_IA: .half 0, 0
 CONTADOR:        .half 0
 SWITCH_TIRO_IA:  .byte 0
 DIR_SHOT_IA:     .byte 0
+IA1_DEATH:       .byte 0
+IA2_DEATH:       .byte 0
+
 .include "data.data"
 
 # TEMPO POR RODADA ~2 MINUTOS
@@ -82,13 +85,18 @@ SETUP: 		la,  a0, mapa4
 GAME_LOOP:	
                 beq s9, zero, FIM_MAPA
 		
-		call IA_MOV1
+		la t3, IA1_DEATH
+	        lb t1, 0(t3)
+		bnez t1, IA_2
+  	        call IA_MOV1
 		
-		la a5, CORD_IA1
-		call TESTE_TIRO1
+
+IA_2:		la t3, IA2_DEATH
+	        lb t1, 0(t3)
+		bnez t1, TESTE_TIMER
 		
                 call IA_MOV2
-                la a5, CORD_IA2
+ 		la a5, CORD_IA2
                 call TESTE_TIRO1
                 		
 TESTE_TIMER:	beq s7, s4, TIMER
@@ -188,12 +196,10 @@ CHAR_ESQ:	la t3, IA_RET
 		lb  t4, 0(a0)
 		li  t6, 7
 		beq t4, t6, CHAVE_VERMELHA
-		mv a6, t1
-		
+		mv a6, t1		
 		call CONFIRMA_1A
 		call CONFIRMA_2A	
-	
-		bne t4, zero, REVERSE ####
+	        bne t4, zero, REVERSE ####
 		mv t1, a6
 		sh t1, 0(t0)
 		li t6, 1
@@ -229,13 +235,11 @@ CHAR_DIR: 	la t3, IA_RET
 		li t3, 320
 		mul t3, t3, t5
 		add a0, a0, t3
-		lb  t4, 0(a0)
-		
+		lb  t4, 0(a0)			
+		bne t4, zero, REVERSE ####
 		mv a6, t1		
 		call CONFIRMA_1A
-		call CONFIRMA_2A	
-		
-		bne t4, zero, REVERSE ####
+		call CONFIRMA_2A
 		
 		mv t1, a6
 		sh t1, 0(t0)
@@ -411,6 +415,12 @@ SHOT_DIR:       li s3, 1  # instancia SHOT
 		add a0, a0, t3
 		lb  t4, 0(a0)
 		bne t4, zero, FIM_SHOT
+		la a6, CORD_IA1
+		li a5, 1
+		call IA_SHOT_DEATH
+		la a6, CORD_IA2
+		li a5, 2
+		call IA_SHOT_DEATH
 		#################
 		
 		la t3, CORD_SHOT
@@ -463,6 +473,12 @@ SHOT_ESQ:       li s3, 2  # instancia SHOT
 		add a0, a0, t3
 		lb  t4, 0(a0)
 		bne t4, zero, FIM_SHOT
+		la a6, CORD_IA1
+		li a5, 1
+		call IA_SHOT_DEATH
+		la a6, CORD_IA2
+		li a5, 2
+		call IA_SHOT_DEATH
 		#################
 		
 		la t3, CORD_SHOT
@@ -513,7 +529,14 @@ SHOT_UP:        li s3, 3  # instancia SHOT
 		mul t3, t3, t2
 		add a0, a0, t3
 		lb  t4, 0(a0)
+		la a6, CORD_IA1
+		li a5, 1
+		call IA_SHOT_DEATH
+		la a6, CORD_IA2
+		li a5, 2
+		call IA_SHOT_DEATH
 		bne t4, zero, FIM_SHOT
+		
 		#################
 		
 		la t3, CORD_SHOT
@@ -564,7 +587,14 @@ SHOT_DOWN:      li s3, 4  # instancia SHOT
 		mul t3, t3, t2
 		add a0, a0, t3
 		lb  t4, 0(a0)
+		la a6, CORD_IA1
+		li a5, 1
+		call IA_SHOT_DEATH
+		la a6, CORD_IA2
+		li a5, 2
+		call IA_SHOT_DEATH
 		bne t4, zero, FIM_SHOT
+		
 		#################
 		
 		la t3, CORD_SHOT
@@ -688,8 +718,8 @@ CHAVE_VERMELHA:	# t1 = X t5 = Y
 		
 		li s6, 1
 		la a0, tileA
-		mv a1, t1
-		mv a2, t5
+		mv a1, zero
+		li a2, 64
 		li a3, 0
 		call PRINT
 		li a3, 1
@@ -733,23 +763,27 @@ SWITCH_VERMELHO_ESQ:  la a0, charL_RED
 		      li t6, 143
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERMELHO
-		      ret
+		      
+		      j MACRO_RET
 		      
 SWITCH_VERMELHO_DIR:  la a0, charR_RED
 		      mv s2, a0
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERMELHO
-		      ret 		      		      		      
+		      
+		      j MACRO_RET	      		      		      		      		      		      
 
 SWITCH_VERMELHO_UP:   la a0, charUP_RED
 		      mv s2, a0
-		      ret 		    		    
+		      
+		      j MACRO_RET		    		    
  
 SWITCH_VERMELHO_DOWN: la a0, charD_RED
 		      mv s2, a0
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERMELHO
-		      ret
+		      
+		      j MACRO_RET
 
 TESTE_TIRO_RED:	      la t0, charL_RED
 		      beq s2, t0, SHOT_ESQ
@@ -771,7 +805,7 @@ TESTE_VERMELHO:      la t0, CHAR_POS
 		     li t6, 384
                      add t4, t1, t2
                      beq t6, t4, FIM_VERMELHO
-                     ret
+                     j MACRO_RET
                      
 FIM_VERMELHO:	     #COORD (224,176)
 		     la a0, borda
@@ -798,8 +832,8 @@ FIM_VERMELHO:	     #COORD (224,176)
 CHAVE_VERDE: 	     # t1 = X t5 = Y
 		     li s6, 2
 		     la a0, tileA
-		     mv a1, t5
-		     mv a2, t1
+		     li a1, 48
+		     li a2, 176
 		     li a3, 0
                      call PRINT
 		     li a3, 1
@@ -841,28 +875,32 @@ SWITCH_VERDE_ESQ:     la a0, charL_GREEN
 		      li t6, 143
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERDE
-		      ret
+		      
+		      j MACRO_RET
 	
 SWITCH_VERDE_DIR:     la a0, charR_GREEN
 		      mv s2, a0
 		      li t6, 143
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERDE
-		      ret
-		    
+		      
+		      j MACRO_RET
+		      		    
 SWITCH_VERDE_UP:      la a0, charUP_GREEN
 		      mv s2, a0
 		      li t6, 143
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERDE
-		      ret
+		      
+		      j MACRO_RET
 		      
 SWITCH_VERDE_DOWN:    la a0, charD_GREEN
                       mv s2, a0
                       li t6, 143
 		      lh t2, 2(t0)
 		      bgt t2, t6, TESTE_VERDE
-                      ret
+                      
+                      j MACRO_RET
 		     
 TESTE_VERDE:          la t0, CHAR_POS
 		      lh t1, 0(t0)
@@ -871,7 +909,8 @@ TESTE_VERDE:          la t0, CHAR_POS
 		      li t6, 33280
                       mul t4, t1, t2
                       beq t6, t4, FIM_VERDE
-                      ret
+                      
+                      j MACRO_RET
 
 FIM_VERDE:            #COORD (208,176)
 		      la a0, borda
@@ -1098,7 +1137,8 @@ QUIT:		      li t0, 0xFF200604
 		      li a7, 10
 		      ecall
 		      
-MOVE_IA1: 	     
+MOVE_IA1: 	      
+		      		      
 		      li a0, 1
 		      li a1, 4
 		      li a7, 42
@@ -1321,7 +1361,9 @@ REVERSE_IA1:
 		      lw t1, 0(t0)
 		      jr t1			      
 		      
-IA_MOV1:	      la t0, IA_RET
+IA_MOV1:	      
+		      
+                      la t0, IA_RET
 		      sw ra, 0(t0)
 		      la s8, inimigo1
 		      la s10, CORD_IA1
@@ -1329,7 +1371,11 @@ IA_MOV1:	      la t0, IA_RET
 		      beq s7, s4, MOVE_IA1
 		      ret
 
-IA_MOV2:	      la t0, IA_RET
+IA_MOV2:	      #la t0, IA1_DEATH
+		      #lb t1, 0(t0)
+		      #bnez t1, FIM
+		      
+                      la t0, IA_RET
 		      sw ra, 0(t0)
 		      la s8, inimigo2
 		      la s10, CORD_IA2
@@ -1395,7 +1441,17 @@ DIR_TIROH:            la t0, SWITCH_TIRO_IA
 		      lh t4, 2(t3)
 		      sh t4, 2(t6)
 		      ################
-		      
+		      ### EFEITO SONORO TIRO
+		      li a0, 70
+		      li a1, 1000
+		      li a2, 127
+		      li a3, 100
+		      li a7, 31
+		      ecall
+		      li a0, 1500
+		      li a7, 32
+		      ecall
+		      ##############
 		      
 		      bltz t1, TIRO_HORIZONTAL_R
 		      j TIRO_HORIZONTAL_L
@@ -1571,3 +1627,80 @@ CONFIRMA_DED:        la t0, CHAR_POS
 	             lh t2, 2(t0)
 	       
 	             beq t1, t2, DERROTA			  	      		            		      	  	      		            		      			  	      		            		      	  	      		            		      			  	      		            		      	  	      		            		      			  	      		            		      	  	      		            		      
+	             ret
+
+IA_SHOT_DEATH:       mv t0, a6 #a6 = COORDENADA IA  #a5= 1 IA1 a5 = 2 IA2
+		     lh t1, 0(t0) # t1= x
+		     la t0, CORD_SHOT
+		     lh t2, 0(t0)
+		     
+		     beq t1, t2, CONFIRMA_DED_IA
+		     ret
+
+CONFIRMA_DED_IA:     mv t0, a6
+		     lh t1, 2(t0)
+		     la t0, CORD_SHOT
+		     lh t2, 2(t0)
+		     
+		     beq t1, t2, IA_DED
+		     ret
+
+IA_DED:		     mv t1, a5
+		     la t0, IA_RET
+		     sw ra, 0(t0)
+		     
+		     li t0, 1
+		     beq t1, t0, IA1_DED
+		     
+		     li t0, 2
+		     beq t1, t0, IA2_DED
+		     
+IA1_DED:	     la t0, IA1_DEATH
+		     li t1, 1
+		     sb t1, 0(t0)
+		     
+		     la t0, CORD_IA1
+		     la a0, tileP
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     la t0, CORD_IA1
+		     lh t1, 0(t0)
+		     mv t1, zero
+		     sh t1, 0(t0)
+		     lh t1, 2(t0)
+		     mv t1, zero
+		     sh t1, 2(t0)
+		     
+		     j FIM_SHOT
+
+IA2_DED:	     la t0, IA2_DEATH
+		     li t1, 1
+		     sb t1, 0(t0)
+		     
+		     la t0, CORD_IA2
+		     la a0, tileP
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     li a3, 0
+		     call PRINT
+		     li a3, 1
+		     call PRINT
+		     
+		     la t0, CORD_IA2
+		     lh t1, 0(t0)
+		     mv t1, zero
+		     sh t1, 0(t0)
+		     lh t1, 2(t0)
+		     mv t1, zero
+		     sh t1, 2(t0)
+		     
+		     j FIM_SHOT
+		     
+MACRO_RET:	     la t0, IA_RET
+		     lw t1, 0(t0)
+		     jr t1		     		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		     		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             		     		      	             	             		      	             	             		      	             	             		      	             	             
