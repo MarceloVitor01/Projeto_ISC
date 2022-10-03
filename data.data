@@ -22,3 +22,5 @@
 .include "sprites/tile_TIMER.data"
 .include "sprites/derrota.data"
 .include "sprites/fundoP.data"
+.include "sprites/inimigo1.data"
+.include "sprites/inimigo2.data"
