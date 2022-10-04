@@ -1,43 +1,22 @@
 .data
-CHAR_POS: 	.half 16, 32
-OLD_CHAR_POS:	.half 16, 32
-CORD_SHOT:	.half 0, 0
-OLD_CORD_SHOT:	.half 0, 0
-CORD_TIMER:     .half 176, 0
-CORD_IA1:       .half 48, 160
-OLD_CORD_IA1:   .half 48, 160
-CORD_IA2:    	.half 224, 48
-OLD_CORD_IA2:   .half 224, 96
-IA_RET:         .word 0
-CORD_SHOT_IA:   .half 0, 0
-OLD_CORD_SHOT_IA: .half 0, 0
-CONTADOR:         .half 0
-SWITCH_TIRO_IA:   .byte 0
-DIR_SHOT_IA:      .byte 0
-IA1_DEATH:        .byte 0
-IA2_DEATH:        .byte 0
-VIDAS:            .byte 3
-COORD_VIDA:       .half 288, 206
-
 .include "data.data"
 
 # TEMPO POR RODADA ~2 MINUTOS
-### EFEITOS SONOROS PROMISSORES:
-# MORTE INIMIGO: a2 = 124
+
 
 
 # s0 = FRAME SWITCH
 # s1 = TIMER
-# s2 = ENDERECO ÚLTIMO PERSONAGEM USADO
+# s2 = ENDERECO ?LTIMO PERSONAGEM USADO
 # s3 = SWITCH TIRO
 # s4 = RELOGIO
 # s5 = ACAO IA
 # s6 = SWITCH CHAR
 # s7 / s4= RELOGIO
-# S8 = RELOGIO SHOT IA
+# S8 = CHAR IA
 # s9 = CONTADOR DE CHAVES
-
-
+# s10 = X IA
+# s11 = Y IA
 
 # s6 = 0 CHAR BRANCO
 # s6 = 1 CHAR VERMELHO
@@ -82,7 +61,7 @@ CHANGE_SETUP:   mv s0, zero
 		li t0, 0xFF200604
 		sw s0, 0(t0)
 
-SETUP: 		la,  a0, mapa4
+SETUP: 		jal ra, TESTE_MAPA
 		li a1, 0
 		li a2, 0
 		li a3, 0
@@ -130,7 +109,8 @@ GAME_LOOP:
 	        lb t1, 0(t3)
 		bnez t1, IA_2
   	        call IA_MOV1
-		
+		la a5, CORD_IA1
+                call TESTE_TIRO1
 
 IA_2:		la t3, IA2_DEATH
 	        lb t1, 0(t3)
@@ -183,9 +163,7 @@ P_TESTE:
 		call PRINT
 		
 		addi s7, s7, 1
-		
-			
-		
+											
 		j GAME_LOOP
 		
 KEY2:		li t1,0xFF200000
@@ -211,9 +189,7 @@ KEY2:		li t1,0xFF200000
 		
 		li t0, 'r'
 		beq t2, t0, RETRY
-		
-		
-	
+					
 FIM:		ret
 		
 
@@ -228,7 +204,7 @@ CHAR_ESQ:	la t3, IA_RET
 		lh t1, 0(t0) # endereco X
 		lh t5, 2(t0) # endereco Y      
 		addi t1, t1, -16
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -270,13 +246,15 @@ CHAR_DIR: 	la t3, IA_RET
 		
 		## CHECAGEM DE COLISAO OU CHAVES
 		lh t5, 2(t0) # endereco Y      
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
 		mul t3, t3, t5
 		add a0, a0, t3
-		lb  t4, 0(a0)			
+		lb  t4, 0(a0)
+		li  t6, 7
+		beq t4, t6, CHAVE_VERMELHA			
 		bne t4, zero, REVERSE ####
 		mv a6, t1		
 		call CONFIRMA_1A
@@ -312,7 +290,7 @@ CHAR_UP: 	la t3, IA_RET
 		
 		## CHECAGEM DE COLISAO
 		lh t1, 0(t0) # endereco X      
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -355,7 +333,7 @@ CHAR_DOWN: 	la t3, IA_RET
 		addi t5, t5, 16 # endereco Y
 		## CHECAGEM DE COLISAO
 		lh t1, 0(t0) # endereco X      
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -419,6 +397,9 @@ DIR_SHOT:	### EFEITO SONORO TIRO
 		li t6, 1
 		beq s6, t6, TESTE_TIRO_RED
 		
+		li t6, 2
+		beq s6, t6, TESTE_TIRO_GREEN
+		
 		la t0, charL
 		beq s2, t0, SHOT_ESQ
 		
@@ -448,7 +429,7 @@ SHOT_DIR:       li s3, 1  # instancia SHOT
 		sh t2, 2(t3) 
 		
 		## CHECAGEM COLISAO TIRO
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -506,7 +487,7 @@ SHOT_ESQ:       li s3, 2  # instancia SHOT
 		sh t2, 2(t3) 
 		
 		## CHECAGEM COLISAO TIRO
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -563,7 +544,7 @@ SHOT_UP:        li s3, 3  # instancia SHOT
 		sh t2, 2(t3) 
 		
 		## CHECAGEM COLISAO TIRO
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -621,7 +602,7 @@ SHOT_DOWN:      li s3, 4  # instancia SHOT
 		sh t2, 2(t3) 
 		
 		## CHECAGEM COLISAO TIRO
-		la a0, mapa4
+		jal ra, TESTE_MAPA
 		addi a0, a0, 8
 		add a0, a0, t1
 		li t3, 320
@@ -695,7 +676,7 @@ FIM_SHOT: 	mv s3, zero
 		
 
 #
-#	a0 = endereï¿½o imagem
+#	a0 = endere?o imagem
 #	a1 = x
 #	a2 = y
 #	a3 = frame (0 ou 1)
@@ -755,12 +736,13 @@ REVERSE:
 
 
 
-CHAVE_VERMELHA:	# t1 = X t5 = Y
+CHAVE_VERMELHA:	# t1 = X t5 = Y chave_vermelha: (0,64)
 		
 		li s6, 1
 		la a0, tileA
-		mv a1, zero
-		li a2, 64
+		la t6, CORD_CHAVE_VERM  
+		lh a1, 0(t6)
+		lh a2, 2(t6)
 		li a3, 0
 		call PRINT
 		li a3, 1
@@ -833,12 +815,25 @@ TESTE_TIRO_RED:	      la t0, charL_RED
 		      beq s2, t0, SHOT_DIR
 		
 		
-		     la t0, charUP_RED
-		     beq s2, t0, SHOT_UP
+		      la t0, charUP_RED
+		      beq s2, t0, SHOT_UP
 		
-		     la t0, charD_RED
-		     beq s2, t0, SHOT_DOWN
-		     
+		      la t0, charD_RED
+		      beq s2, t0, SHOT_DOWN
+
+TESTE_TIRO_GREEN:     la t0, charL_GREEN
+		      beq s2, t0, SHOT_ESQ
+		
+		      la t0, charR_GREEN
+		      beq s2, t0, SHOT_DIR
+		
+		
+		      la t0, charUP_GREEN
+		      beq s2, t0, SHOT_UP
+		
+		      la t0, charD_GREEN
+		      beq s2, t0, SHOT_DOWN
+		     		     
 TESTE_VERMELHO:      la t0, CHAR_POS
 		     lh t1, 0(t0)
 		     
@@ -870,11 +865,12 @@ FIM_VERMELHO:	     #COORD (224,176)
 		     addi s9, s9, -1
 		     j GAME_LOOP
 		   
-CHAVE_VERDE: 	     # t1 = X t5 = Y
+CHAVE_VERDE: 	     # t1 = X t5 = Y #chave verde((48, 176)
 		     li s6, 2
 		     la a0, tileA
-		     li a1, 48
-		     li a2, 176
+		     la t6, CORD_CHAVE_VERDE
+		     lh a1, 0(t6)
+		     lh a2, 2(t6)
 		     li a3, 0
                      call PRINT
 		     li a3, 1
@@ -1037,8 +1033,15 @@ LOOP_FINAL:	      la t0, CHAR_POS
 		      li a7, 32
 		      ecall
 		      bne a1, t6, LOOP_FINAL
+		      la t0, MAPA #TROCA PARA O MAPA 2
+		      li t1, 1
+		      sb t1, 0(t0)	      
 		      
-		      
+		      la t0, FASES_COMPLETAS
+		      lb t1, 0(t0)
+		      addi t1, t1, -1
+		      sb t1, 0(t0)
+		      bnez t1, LOAD_MAPA2			      
 		      
 		      		      
 END_GAME: 	      #(208,160)
@@ -1124,7 +1127,7 @@ RETRY:               la t0, CHAR_POS
 		     
 		     la t0, VIDAS
 		     lb t1, 0(t0)
-		     addi t1, t1, 3
+		     li t1, 3
 		     sb t1, 0(t0)
 		     
 		     la t0, COORD_VIDA
@@ -1158,6 +1161,18 @@ RETRY:               la t0, CHAR_POS
 		     sh t1, 0(t0)
 		     li t1, 48
 		     sh t1, 2(t0)
+		     
+		     la t0, IA1_DEATH
+		     mv t1, zero
+		     sb t1, 0(t0)
+		     
+		     la t0, IA2_DEATH
+		     mv t1, zero
+		     sb t1, 0(t0)
+		     
+		     la t0, MAPA
+		     mv t1, zero
+		     sb t1, 0(t0)
 		     j SETUP
 		     
 		     
@@ -1256,7 +1271,7 @@ MOVE_IA1_LEFT:        mv t0, s10
 		      addi t1, t1, -16
 		      
 		      ###################
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1303,7 +1318,7 @@ MOVE_IA1_RIGHT:       mv t0, s10
 		      addi t1, t1, 16
 		      
 		      ###################
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1349,7 +1364,7 @@ MOVE_IA1_UP:	      mv t0, s10
 		
 		      ## CHECAGEM DE COLISAO
 		      lh t1, 0(t0) # endereco X      
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1394,7 +1409,7 @@ MOVE_IA1_DOWN:        mv t0, s10
 		
 		      ## CHECAGEM DE COLISAO
 		      lh t1, 0(t0) # endereco X      
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1463,7 +1478,7 @@ IA_MOV2:	      #la t0, IA1_DEATH
 		      la s10, CORD_IA2
 		      la s11, OLD_CORD_IA2
 		      beq s7, s4, MOVE_IA1
-		      ret	     	     
+		      ret 	     	     
 
 CONFIRMA_1A:   	      la t6, CORD_IA1
 		      lh t3, 0(t6)
@@ -1489,12 +1504,14 @@ TESTE_TIRO1:	      #a5 = COORDENADA IA
 		     
 		      la t0, IA_RET
 		      sw ra, 0(t0)
-		      
+		     
+		       
 		      la t1, SWITCH_TIRO_IA
 		      lb t2, 0(t1)
 		      li t3, 1
  		      beq t3, t2, TESTE_TIRO_IA
- 		       
+ 		      		      
+		      		 
 		      la t0, CHAR_POS
 		      
 		      lh t1, 2(t0)
@@ -1506,7 +1523,15 @@ TESTE_TIRO1:	      #a5 = COORDENADA IA
 		      lw t1, 0(t0)
 		      jr t1
 		      
-DIR_TIROH:            la t0, SWITCH_TIRO_IA
+DIR_TIROH:            
+		      la t0, CONTADOR
+		      lb t1, 0(t0)
+		      bnez t1, RETORNO3
+		      li t1, 30
+		      sb t1, 0(t0)
+		      
+		      
+		      la t0, SWITCH_TIRO_IA
 		      li t1, 1
 		      sb t1, 0(t0)
 		      
@@ -1535,6 +1560,7 @@ DIR_TIROH:            la t0, SWITCH_TIRO_IA
 		      ecall
 		      ##############
 		      
+		      
 		      bltz t1, TIRO_HORIZONTAL_R
 		      j TIRO_HORIZONTAL_L
 		      		     
@@ -1556,7 +1582,7 @@ TIRO_HORIZONTAL_R:
 		      sh t2, 2(t3) 
 		    		      
 		      ## CHECAGEM COLISAO TIRO
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1591,12 +1617,6 @@ TIRO_HORIZONTAL_R:
 		      call PRINT
 		      li a3, 1
 		      call PRINT
-		      ############ INCREMENTO CONTADOR
-		      la t0, CONTADOR
-		      lw t1 0(t0)
-		      addi t1, t1, 10
-		      sw t1, 0(t0)
-                      #########
                       
                       la t0, IA_RET
 		      lw t1, 0(t0)
@@ -1619,7 +1639,7 @@ TIRO_HORIZONTAL_L:
 		      sh t2, 2(t3) 
 		    		      
 		      ## CHECAGEM COLISAO TIRO
-		      la a0, mapa4
+		      jal ra, TESTE_MAPA
 		      addi a0, a0, 8
 		      add a0, a0, t1
 		      li t3, 320
@@ -1654,19 +1674,18 @@ TIRO_HORIZONTAL_L:
 		      call PRINT
 		      li a3, 1
 		      call PRINT
-                      
-                      ############ INCREMENTO CONTADOR
-		      la t0, CONTADOR
-		      lw t1 0(t0)
-		      addi t1, t1, 10
-		      sw t1, 0(t0)
-                      #########
-                      
+                     
                       la t0, IA_RET
 		      lw t1, 0(t0)
 		      jr t1
  
-RETORNO3:             lh t1, 0(t0)
+RETORNO3:             la t0, CONTADOR
+		      lb t1, 0(t0)
+		      addi t1, t1, -1
+		      sb t1, 0(t0)
+		      
+		      la t0, IA_RET
+		      lw t1, 0(t0)
 		      jr t1
 		                   
 TESTE_TIRO_IA:	      la t0, DIR_SHOT_IA
@@ -1731,6 +1750,17 @@ IA_DED:		     mv t1, a5
 		     la t0, IA_RET
 		     sw ra, 0(t0)
 		     
+		     ### EFEITO SONORO TIRO
+		     li a0, 70
+		     li a1, 600
+		     li a2, 124
+		     li a3, 100
+		     li a7, 31
+		     ecall
+		     li a0, 1250
+		     li a7, 32
+		     ecall
+		     #######
 		     li t0, 1
 		     beq t1, t0, IA1_DED
 		     
@@ -1760,7 +1790,13 @@ IA1_DED:	     la t0, IA1_DEATH
 		     
 		     j FIM_SHOT
 
-IA2_DED:	     la t0, IA2_DEATH
+IA2_DED:	     la t0, VIDAS_IA2
+		     lb t1, 0(t0)
+		     addi t1, t1, -1
+		     sb t1, 0(t0)
+		     bnez t1, IA2_DED_MOVE
+
+		     la t0, IA2_DEATH
 		     li t1, 1
 		     sb t1, 0(t0)
 		     
@@ -1791,6 +1827,18 @@ REBORN:              la t0, VIDAS   # mover 19 pixels para esquerda base: (288,2
 		     lb t1, 0(t0)
 		     addi t1, t1, -1
 		     sb t1, 0(t0)
+		     
+		     ### EFEITO SONORO TIRO
+		     li a0, 70
+		     li a1, 600
+		     li a2, 124
+		     li a3, 100
+		     li a7, 31
+		     ecall
+		     li a0, 1250
+		     li a7, 32
+		     ecall
+		     #######
 		     
 		     la t0, COORD_VIDA
 		     la a0, tileP
@@ -1836,4 +1884,120 @@ REBORN:              la t0, VIDAS   # mover 19 pixels para esquerda base: (288,2
 		     sh t1, 2(t0)
 		     la s2, charR
 		     
-		     j GAME_LOOP
+		     j FIM_SHOT_IA
+		     
+TESTE_MAPA:	     mv a1, t0
+		     mv a2, t1
+		     mv a3, t2
+		     
+		     la t0, MAPA
+		     lb t1, 0(t0)
+		     
+		     mv t2, zero
+		     beq t1, t2, MAPA_1
+		     
+		     li t2, 1
+		     beq t1, t2, MAPA_2
+		     
+MAPA_1:              la a0, mapa4
+		     mv t0, a1
+		     mv t1, a2
+		     mv t2, a3
+		     jr ra
+		     
+MAPA_2:		     la a0, mapa2
+		     mv t0, a1
+		     mv t1, a2
+		     mv t2, a3
+		     jr ra		     		     		     		     		     		     		     
+
+IA2_DED_MOVE:	     la t0, CORD_IA2
+		     la a0, tileP
+		     lh a1, 0(t0)
+		     lh a2, 2(t0)
+		     li a3, 0
+		     call PRINT
+		     j FIM_SHOT
+
+LOAD_MAPA2:	     la t0, CHAR_POS
+		     li t1, 16
+		     sh t1, 0(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     
+		     la t0, OLD_CHAR_POS
+		     li t1, 16
+		     sh t1, 0(t0)
+		     li t1, 32
+		     sh t1, 2(t0)
+		     
+		     la t0, CORD_TIMER
+		     li t1, 176
+		     sh t1, 0(t0)
+		     mv t1, zero
+		     sh t1, 2(t0)
+		     
+		     la t0 CORD_IA1
+		     li t1, 48
+		     sh t1, 0(t0)
+		     li t1, 160
+		     sh t1, 2(t0)
+		     
+		     la t0 OLD_CORD_IA1
+		     li t1, 48
+		     sh t1, 0(t0)
+		     li t1, 160
+		     sh t1, 2(t0)
+		     
+		     la t0 CORD_IA2
+		     li t1, 224
+		     sh t1, 0(t0)
+		     li t1, 48
+		     sh t1, 2(t0)
+		     
+		     la t0 OLD_CORD_IA2
+		     li t1, 224
+		     sh t1, 0(t0)
+		     li t1, 48
+		     sh t1, 2(t0)
+		     
+		     la t0, IA1_DEATH
+		     mv t1, zero
+		     sb t1, 0(t0)
+		     
+		     la t0, IA2_DEATH
+		     mv t1, zero
+		     sb t1, 0(t0)
+		     
+		     la t0, CORD_CHAVE_VERM #(304, 64)
+		     li t1, 304
+		     sh t1, 0(t0)
+		     li t1, 64
+		     sh t1, 2(t0)
+		     
+		     la t0, CORD_CHAVE_VERDE #(96, 176 )
+		     li t1, 96
+		     sh t1, 0(t0)
+		     li t1, 176
+		     sh t1, 2(t0)
+		     
+		     la t0, VIDAS
+		     lb t1, 0(t0)
+		     li t1, 3
+		     sb t1, 0(t0)
+		     
+		     la t0, COORD_VIDA
+		     lh t1, 0(t0)
+		     li t1, 288 
+		     sh t1, 0(t0)
+		     lh t1, 2(t0)
+		     li t1, 206
+		     sh t1, 2(t0)
+		     
+		     la t0, VIDAS_IA2
+		     li t1, 2
+		     sb t1, 0(t0)
+		     		     
+		     j SETUP
+
+	     

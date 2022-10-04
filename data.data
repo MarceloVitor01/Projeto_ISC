@@ -1,3 +1,28 @@
+CHAR_POS: 	.half 16, 32
+OLD_CHAR_POS:	.half 16, 32
+CORD_SHOT:	.half 0, 0
+OLD_CORD_SHOT:	.half 0, 0
+CORD_TIMER:     .half 176, 0
+CORD_IA1:       .half 48, 160
+OLD_CORD_IA1:   .half 48, 160
+CORD_IA2:    	.half 224, 48
+OLD_CORD_IA2:   .half 224, 96
+IA_RET:         .word 0
+CORD_SHOT_IA:   .half 0, 0
+OLD_CORD_SHOT_IA: .half 0, 0
+CONTADOR:         .byte 0
+SWITCH_TIRO_IA:   .byte 0
+DIR_SHOT_IA:      .byte 0
+IA1_DEATH:        .byte 0   #chave verde(48, 176)
+IA2_DEATH:        .byte 0   #chave_vermelha: (0,64)
+VIDAS:            .byte 3
+COORD_VIDA:       .half 288, 206
+MAPA:		  .byte 0
+FASES_COMPLETAS:  .byte 2
+CORD_CHAVE_VERM:  .half 0, 64
+CORD_CHAVE_VERDE: .half 48, 176
+VIDAS_IA2:	  .byte 2
+
 .include "sprites/charUP.data"
 .include "sprites/charD.data"
 .include "sprites/charR.data"
@@ -26,3 +51,4 @@
 .include "sprites/inimigo2.data"
 .include "sprites/menu.data"
 .include "sprites/menu2.data"
+.include "sprites/mapa2.data"
