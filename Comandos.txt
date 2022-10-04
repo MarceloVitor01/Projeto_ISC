@@ -1,0 +1,6 @@
+w- CIMA
+s- BAIXO
+a- ESQUERDA
+d- DIREITA
+
+k- ATIRA
