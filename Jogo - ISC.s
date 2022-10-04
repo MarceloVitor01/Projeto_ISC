@@ -105,6 +105,7 @@ SETUP: 		jal ra, TESTE_MAPA
 GAME_LOOP:	
                 beq s9, zero, FIM_MAPA
 		
+		
 		la t3, IA1_DEATH
 	        lb t1, 0(t3)
 		bnez t1, IA_2
@@ -1919,7 +1920,11 @@ IA2_DED_MOVE:	     la t0, CORD_IA2
 		     call PRINT
 		     j FIM_SHOT
 
-LOAD_MAPA2:	     la t0, CHAR_POS
+LOAD_MAPA2:	     li s0, 0
+		     li t0, 0xFF200604
+		     sw s0, 0(t0)
+			
+		     la t0, CHAR_POS
 		     li t1, 16
 		     sh t1, 0(t0)
 		     li t1, 32
@@ -1999,5 +2004,6 @@ LOAD_MAPA2:	     la t0, CHAR_POS
 		     sb t1, 0(t0)
 		     		     
 		     j SETUP
+
 
 	     
