@@ -1,18 +1,18 @@
 .data
-.include "data.data"
+.include "data/data.data"
 
-# TEMPO POR RODADA ~2 MINUTOS
+# TEMPO POR RODADA ~5 MINUTOS
 
 
 
 # s0 = FRAME SWITCH
 # s1 = TIMER
-# s2 = ENDERECO ?LTIMO PERSONAGEM USADO
+# s2 = ENDERECO ÚLTIMO PERSONAGEM USADO
 # s3 = SWITCH TIRO
-# s4 = RELOGIO
-# s5 = ACAO IA
+# s4 = RELÓGIO
+# s5 = AÇÃO IA
 # s6 = SWITCH CHAR
-# s7 / s4= RELOGIO
+# s7 / s4= RELÓGIO
 # S8 = CHAR IA
 # s9 = CONTADOR DE CHAVES
 # s10 = X IA
@@ -1193,7 +1193,7 @@ TIMER:
 		     sh t1, 0(t0)
 		     
 		     addi s1, s1, -4
-		     addi s4, s4, 25
+		     addi s4, s4, 100
 		 
 		     j P_TESTE
 

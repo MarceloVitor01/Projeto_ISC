@@ -1,0 +1,36 @@
+Pulsares - Projeto ISC - UnB - 2022.1:
+
+O jogo consiste em coletar as chaves verdes e vermelhas e levá-las até as fechaduras de respectivas cores
+
+Para isso, o usuário deverá conduzir o personagem até a localização das chaves no tempo delimitado(5 minutos). Além do tempo, o usuário deverá fugir dos inimigos ou atirar neles para que os inimigos sejam eliminados.
+
+Ganha quem conseguir completar os objetivos das duas fases.
+
+#Como executar o jogo via RARS#
+
+- Execute o arquivo "RARS";
+
+- Abra o arquivo "Jogo - ISC" dentro do RARS;
+
+- Na aba "Tools", no canto superior, selecione as opções "Bitmap Display" e "Keyboard and Display MMIO Simulator", em seguida, selecione "connect to program" nas duas abas que serão abertas;
+
+- Aperte as teclas "F3" e, em seguida, "F5", ou clique no símbolo de ferramentas e depois no play(círculo verde com um triângulo branco na horizontal);
+
+- Selecione a área vazia mais abaixo em "Keyboard and Display MMIO" e digite "P" para iniciar o jogo;
+
+O jogo consiste em coletar as chaves verdes e vermelhas e levá-las até as fechaduras de respectivas cores
+
+Para isso, o usuário deverá conduzir o personagem até a localização das chaves no tempo delimitado(5 minutos). Além do tempo, o usuário deverá fugir dos inimigos ou atirar neles para que os inimigos sejam eliminados.
+
+Ganha quem conseguir completar os objetivos das duas fases.
+
+#Movimentação#
+
+W - CIMA
+A - ESQUERDA
+S - BAIXO
+D - DIREITA
+
+K - TIRO
+
+Boa diversão!
