@@ -1,5 +1,5 @@
 .data
-.include "data.data"
+.include "data/data.data"
 
 # TEMPO POR RODADA ~2 MINUTOS
 
